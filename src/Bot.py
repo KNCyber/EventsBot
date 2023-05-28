@@ -63,12 +63,12 @@ async def on_ready():
 
 @bot.tree.command(name="event")
 async def event(interaction: discord.Interaction):
-    if interaction.guild.get_role(int(os.getenv("roleId"))) in interaction.user.roles:
+    if interaction.guild.get_role(int(os.getenv("role_id"))) in interaction.user.roles:
         await interaction.response.send_modal(EventModal())
 
 
 async def send_event(modal_input, everyone):
-    event_channel = bot.get_channel(int(os.getenv("eventChannelId")))
+    event_channel = bot.get_channel(int(os.getenv("event_channel_id")))
     event_message = create_event_message(modal_input=modal_input, everyone=everyone)
     await event_channel.send(event_message)
 
