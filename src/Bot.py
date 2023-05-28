@@ -63,9 +63,6 @@ async def on_ready():
 async def event(interaction: discord.Interaction):
     if interaction.guild.get_role(config['roleId']) in interaction.user.roles:
         await interaction.response.send_modal(EventModal())
-    else:
-        await interaction.response.send_message(f"You don't have the permission to execute this command",
-                                                ephemeral=True)
 
 
 async def send_event(modal_input, everyone):
