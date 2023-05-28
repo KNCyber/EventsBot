@@ -1,9 +1,11 @@
 import discord
 import json
+import os
+from dotenv import load_dotenv
 from discord.ext import commands
 
-f = open("../config.json")
-config = json.loads(f.read())
+
+load_dotenv()
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 
@@ -61,12 +63,12 @@ async def on_ready():
 
 @bot.tree.command(name="event")
 async def event(interaction: discord.Interaction):
-    if interaction.guild.get_role(config['roleId']) in interaction.user.roles:
+    if interaction.guild.get_role(int(os.getenv("roleId"))) in interaction.user.roles:
         await interaction.response.send_modal(EventModal())
 
 
 async def send_event(modal_input, everyone):
-    event_channel = bot.get_channel(config['eventChannelId'])
+    event_channel = bot.get_channel(int(os.getenv("eventChannelId")))
     event_message = create_event_message(modal_input=modal_input, everyone=everyone)
     await event_channel.send(event_message)
 
@@ -78,4 +80,4 @@ def create_event_message(modal_input: [], everyone):
     return f"{isEveryone}{modal_input.get('meetingTitle')}\n{modal_input.get('description')}\n\n\n{modal_input['room']},\t{modal_input['date']}\n\n{modal_input['beer']}\n\n"
 
 
-bot.run(config['token'])
+bot.run(os.getenv("token"))
