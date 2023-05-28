@@ -34,9 +34,11 @@ async def on_ready():
 
 
 @bot.tree.command(name="event")
-@commands.has_role(config['rolePermission'])
 async def event(interaction: discord.Interaction):
-    await interaction.response.send_modal(EventModal())
+    if interaction.guild.get_role(config['roleId']) in interaction.user.roles:
+        await interaction.response.send_modal(EventModal())
+    else:
+        await interaction.response.send_message(f"You don't have the permission to execute this command", ephemeral=True)
 
 
 def create_event_message(self):
