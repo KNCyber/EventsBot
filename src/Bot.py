@@ -4,8 +4,28 @@ from discord.ext import commands
 
 f = open("../config.json")
 config = json.loads(f.read())
-
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+
+
+class EveryonePromptView(discord.ui.View):
+
+    def __init__(self, modal_input: dict):
+        super().__init__(timeout=None)
+        self.modal_input = modal_input
+
+    @discord.ui.button(label="@everyone ???", style=discord.ButtonStyle.success)
+    async def set_bool_true(self, interaction: discord.Interaction, self_item) -> None:
+        await send_event(self.modal_input, True)
+        await interaction.response.send_message(
+            f"Event {self.modal_input.get('meetingTitle')} sent to the channel successfully", ephemeral=True)
+        self.stop()
+
+    @discord.ui.button(label="No ping", style=discord.ButtonStyle.red)
+    async def set_bool_false(self, interaction: discord.Interaction, self_item) -> None:
+        await send_event(self.modal_input, False)
+        await interaction.response.send_message(
+            f"Event {self.modal_input.get('meetingTitle')} sent to the channel successfully", ephemeral=True)
+        self.stop()
 
 
 class EventModal(discord.ui.Modal, title="Quack"):
@@ -16,10 +36,16 @@ class EventModal(discord.ui.Modal, title="Quack"):
     beer = discord.ui.TextInput(label="BEER?", placeholder="I hope so", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        event_channel = bot.get_channel(config['eventChannelId'])
-        event_message = create_event_message(self)
-        await event_channel.send(event_message)
-        await interaction.response.send_message(f"Event {self.meetingTitle} added successfully", ephemeral=True)
+        modal_input = dict(meetingTitle=self.meetingTitle.value,
+                           description=self.description.value,
+                           date=self.date.value,
+                           room=self.room.value,
+                           beer=self.beer.value)
+        view = EveryonePromptView(modal_input=modal_input)
+        await interaction.response.send_message(f"Event {self.meetingTitle} added successfully",
+                                                ephemeral=True,
+                                                view=view)
+        await view.wait()
 
 
 # Example of an event
@@ -38,11 +64,21 @@ async def event(interaction: discord.Interaction):
     if interaction.guild.get_role(config['roleId']) in interaction.user.roles:
         await interaction.response.send_modal(EventModal())
     else:
-        await interaction.response.send_message(f"You don't have the permission to execute this command", ephemeral=True)
+        await interaction.response.send_message(f"You don't have the permission to execute this command",
+                                                ephemeral=True)
 
 
-def create_event_message(self):
-    return f"@everyone \t{self.meetingTitle}\n{self.description}\n\n\n{self.room},\t{self.date}\n\n{self.beer}\n\n"
+async def send_event(modal_input, everyone):
+    event_channel = bot.get_channel(config['eventChannelId'])
+    event_message = create_event_message(modal_input=modal_input, everyone=everyone)
+    await event_channel.send(event_message)
+
+
+def create_event_message(modal_input: [], everyone):
+    print(modal_input)
+    modal_input.get("meetingTitle")
+    isEveryone = "@everyone \t" if everyone else ""
+    return f"{isEveryone}{modal_input.get('meetingTitle')}\n{modal_input.get('description')}\n\n\n{modal_input['room']},\t{modal_input['date']}\n\n{modal_input['beer']}\n\n"
 
 
 bot.run(config['token'])
